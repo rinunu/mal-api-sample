@@ -1,0 +1,4 @@
+
+```bash
+./gradlew test
+```
