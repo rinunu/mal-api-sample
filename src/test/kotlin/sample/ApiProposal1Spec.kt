@@ -15,10 +15,6 @@ class ApiProposal1Spec : Spek({
     lateinit var localDb: LocalMyListDb
 
     describe("Proposal 1") {
-        beforeGroup {
-            localDb = LocalMyListDb()
-        }
-
         val initialMyList = arrayOf(
                 MyListItem(animeId = 1, updatedAt = 1),
                 MyListItem(animeId = 2, updatedAt = 2),
@@ -28,6 +24,7 @@ class ApiProposal1Spec : Spek({
 
         on("simple case") {
             serverDb.reset(*initialMyList)
+            localDb = LocalMyListDb()
 
             val res1 = api.get_users_me_animelist(offset = 0, limit = 2)
             it("should have next") {
@@ -50,6 +47,7 @@ class ApiProposal1Spec : Spek({
 
         on("[edge case] delete item during pagination") {
             serverDb.reset(*initialMyList)
+            localDb = LocalMyListDb()
 
             // save for `get the changes since the last time we loaded the list`
             val localDbLoadedAt1 = 3L // local time (consider an error with the server)
@@ -63,6 +61,68 @@ class ApiProposal1Spec : Spek({
             serverDb.deleteMyListItem(animeId = 1, now = 4)
 
             val res2 = api.get_users_me_animelist(offset = 2, limit = 2)
+            it("should not have next") {
+                assertNull(res2.next)
+            }
+
+            localDb.upsert(res2.data)
+
+            val serverMyList1 = serverDb.myListItems
+            val localMyList1 = localDb.myListItems
+            it("is not equal to server data now") {
+                assertNotEquals(serverMyList1, localMyList1)
+            }
+
+            // next update process
+
+            // save for `get the changes since the last time we loaded the list`
+            // val localDbLoadedAt2 = 4L // local time (consider an error with the server)
+
+            // (Pagination is actually required)
+            val res3 = api.get_users_me_animelist(
+                    updatedSince = localDbLoadedAt1, limit = 100)
+            it("should not have next") {
+                assertNull(res3.next)
+            }
+            localDb.upsert(res3.data)
+
+            // (Pagination is actually required)
+            val res4 = api.get_users_me_animelist_deleted(
+                    deletedSince = localDbLoadedAt1, limit = 100)
+            localDb.delete(res4.data)
+
+            val serverMyList2 = serverDb.myListItems
+            val localMyListItems2 = localDb.myListItems
+            it("is equal to server data now") {
+                assertEquals(serverMyList2, localMyListItems2)
+            }
+        }
+    }
+
+    describe("Proposal 1-B") {
+        val initialMyList = arrayOf(
+                MyListItem(animeId = 1, updatedAt = 1),
+                MyListItem(animeId = 2, updatedAt = 2),
+                MyListItem(animeId = 3, updatedAt = 3), 
+                MyListItem(animeId = 4, updatedAt = 4)
+        )
+
+        on("[edge case] delete item during pagination") {
+            serverDb.reset(*initialMyList)
+            localDb = LocalMyListDb()
+
+            // save for `get the changes since the last time we loaded the list`
+            val localDbLoadedAt1 = 3L // local time (consider an error with the server)
+
+            val res1 = api.get_users_me_animelist(updatedSince = 0, limit = 2)
+            it("should have next") {
+                assertNotNull(res1.next)
+            }
+            localDb.upsert(res1.data)
+
+            serverDb.deleteMyListItem(animeId = 1, now = 5)
+            
+            val res2 = api.get_users_me_animelist(updatedSince = res1.next!!.latestUpdatedAt, limit = 2)
             it("should not have next") {
                 assertNull(res2.next)
             }

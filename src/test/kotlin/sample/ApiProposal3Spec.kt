@@ -25,10 +25,6 @@ class ApiProposal3Spec : Spek({
     }
 
     describe("Proposal 3") {
-        beforeGroup {
-            localDb = LocalMyListDb()
-        }
-
         val initialMyList = arrayOf(
                 MyListItem(animeId = 1, updatedAt = 1),
                 MyListItem(animeId = 2, updatedAt = 2),
@@ -38,6 +34,7 @@ class ApiProposal3Spec : Spek({
 
         on("[edge case] delete item during pagination") {
             serverDb.reset(*initialMyList)
+            localDb = LocalMyListDb()
 
             val res1 = api.get_users_me_animelist_bulk2(limit = 2)
             localDb.upsertOrDelete(res1.data)
