@@ -3,6 +3,14 @@ package sample
 typealias AnimeId = Int
 typealias PseudoDateTime = Long
 
+object AnimeIds {
+    val A = 1
+    val B = 2
+    val C = 3
+    val D = 4
+    val E = 5
+}
+
 interface HasModifiedAt {
     val modifiedAt: PseudoDateTime
 }

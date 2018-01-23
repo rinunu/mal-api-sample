@@ -4,6 +4,10 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import sample.AnimeIds.A
+import sample.AnimeIds.B
+import sample.AnimeIds.C
+import sample.AnimeIds.D
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -16,10 +20,10 @@ class ApiProposal1Spec : Spek({
 
     describe("Proposal 1") {
         val initialMyList = arrayOf(
-                MyListItem(animeId = 1, updatedAt = 1),
-                MyListItem(animeId = 2, updatedAt = 2),
-                MyListItem(animeId = 3, updatedAt = 2), // same time
-                MyListItem(animeId = 4, updatedAt = 3)
+                MyListItem(animeId = A, updatedAt = 1),
+                MyListItem(animeId = B, updatedAt = 2),
+                MyListItem(animeId = C, updatedAt = 2), // same time
+                MyListItem(animeId = D, updatedAt = 3)
         )
 
         on("simple case") {
@@ -58,7 +62,7 @@ class ApiProposal1Spec : Spek({
             }
             localDb.upsert(res1.data)
 
-            serverDb.deleteMyListItem(animeId = 1, now = 4)
+            serverDb.deleteMyListItem(animeId = B, now = 4)
 
             val res2 = api.get_users_me_animelist(offset = 2, limit = 2)
             it("should not have next") {
@@ -101,10 +105,10 @@ class ApiProposal1Spec : Spek({
 
     describe("Proposal 1-B") {
         val initialMyList = arrayOf(
-                MyListItem(animeId = 1, updatedAt = 1),
-                MyListItem(animeId = 2, updatedAt = 2),
-                MyListItem(animeId = 3, updatedAt = 3), 
-                MyListItem(animeId = 4, updatedAt = 4)
+                MyListItem(animeId = A, updatedAt = 1),
+                MyListItem(animeId = B, updatedAt = 2),
+                MyListItem(animeId = C, updatedAt = 3), 
+                MyListItem(animeId = D, updatedAt = 4)
         )
 
         on("[edge case] delete item during pagination") {
@@ -120,7 +124,7 @@ class ApiProposal1Spec : Spek({
             }
             localDb.upsert(res1.data)
 
-            serverDb.deleteMyListItem(animeId = 1, now = 5)
+            serverDb.deleteMyListItem(animeId = B, now = 5)
             
             val res2 = api.get_users_me_animelist(updatedSince = res1.next!!.latestUpdatedAt, limit = 2)
             it("should not have next") {
