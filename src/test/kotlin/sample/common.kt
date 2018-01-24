@@ -26,7 +26,7 @@ data class MyListItem(
 /**
  *
  */
-class ApiServerDb {
+class ApiServerDb(initialData: Array<MyListItem> = emptyArray()) {
     data class DeletedMyListItem(
             val animeId: AnimeId,
             val deletedAt: PseudoDateTime) : HasModifiedAt {
@@ -36,6 +36,12 @@ class ApiServerDb {
 
     private val animeIdToMyListItem = mutableMapOf<AnimeId, MyListItem>()
     private val animeIdToDeletedMyListItem = mutableMapOf<AnimeId, DeletedMyListItem>()
+
+    var now: PseudoDateTime = 0
+
+    init {
+        reset(*initialData)
+    }
 
     /**
      * @return order by anime_id
@@ -55,11 +61,18 @@ class ApiServerDb {
         addMyListItems(*items)
     }
 
+    fun addMyListItem(animeId: AnimeId, now: PseudoDateTime) {
+        addMyListItems(MyListItem(animeId, updatedAt = now))
+    }
+
     fun deleteMyListItem(animeId: AnimeId, now: PseudoDateTime) {
         animeIdToMyListItem.remove(animeId)
         animeIdToDeletedMyListItem[animeId] = DeletedMyListItem(animeId, now)
     }
 
+    /**
+     * @deprecated
+     */
     fun getDeletedMyListItem(deletedSince: PseudoDateTime): List<DeletedMyListItem> {
         return deletedMyListItems
                 .filter { it.deletedAt > deletedSince }
@@ -76,8 +89,11 @@ class ApiServerDb {
 class LocalMyListDb {
     private val animeIdToMyListItem = mutableMapOf<AnimeId, MyListItem>()
 
+    /**
+     * order by animeId
+     */
     val myListItems: List<MyListItem>
-        get() = animeIdToMyListItem.values.toList()
+        get() = animeIdToMyListItem.values.sortedBy { it.animeId }
 
     fun upsert(items: List<MyListItem>) {
         animeIdToMyListItem.putAll(items.map { it.animeId to it })
