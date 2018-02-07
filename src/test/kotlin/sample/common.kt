@@ -2,6 +2,7 @@ package sample
 
 typealias AnimeId = Int
 typealias PseudoDateTime = Long
+typealias Score = Int
 
 object AnimeIds {
     val A = 1
@@ -17,7 +18,9 @@ interface HasModifiedAt {
 
 data class MyListItem(
         val animeId: AnimeId,
-        val updatedAt: PseudoDateTime) : HasModifiedAt {
+        val updatedAt: PseudoDateTime,
+        val score: Score = 0
+        ) : HasModifiedAt {
 
     override val modifiedAt: PseudoDateTime
         get() = updatedAt
@@ -63,6 +66,10 @@ class ApiServerDb(initialData: Array<MyListItem> = emptyArray()) {
 
     fun addMyListItem(animeId: AnimeId, now: PseudoDateTime) {
         addMyListItems(MyListItem(animeId, updatedAt = now))
+    }
+
+    fun update(item: MyListItem) {
+        addMyListItems(item)
     }
 
     fun deleteMyListItem(animeId: AnimeId, now: PseudoDateTime) {
